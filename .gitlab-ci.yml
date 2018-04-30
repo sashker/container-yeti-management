@@ -12,7 +12,7 @@ build-master:
   stage: build
   script:
     - export
-    - docker build -t $CI_REGISTRY_IMAGE:$CI_BUILD_REF_NAME --build-arg GIT_URL=$CI_REPOSITORY_URL $CI_PROJECT_DIR/images/docker
+    - docker build -t $CI_REGISTRY_IMAGE:$CI_BUILD_REF_NAME $CI_PROJECT_DIR/images/docker
     - docker push $CI_REGISTRY_IMAGE:$CI_BUILD_REF_NAME
   only:
     - master
@@ -21,7 +21,7 @@ build-stable:
   stage: build
   script:
     - export
-    - docker build -t $CI_REGISTRY_IMAGE:$CI_COMMIT_TAG --build-arg GIT_URL=$CI_REPOSITORY_URL $CI_PROJECT_DIR/images/docker
+    - docker build -t $CI_REGISTRY_IMAGE:$CI_COMMIT_TAG $CI_PROJECT_DIR/images/docker
     - docker push $CI_REGISTRY_IMAGE:$CI_COMMIT_TAG
   only:
     - tags

@@ -1,4 +1,4 @@
-#yeti-management in a container
+# yeti-management in a container
 #### Containerized version of yeti-management daemon (part of the "Yeti switch" project)
 We are aimed to contenerize yeti-management in order to provide an opportunity to run it
 in Docker and other container services.
