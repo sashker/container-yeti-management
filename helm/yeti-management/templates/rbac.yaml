@@ -1,0 +1,44 @@
+{{- if .Values.rbacCreate }}
+---
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: {{ template "yeti-management.fullname" . }}
+---
+apiVersion: rbac.authorization.k8s.io/v1beta1
+kind: Role
+metadata:
+  name: {{ template "yeti-management.fullname" . }}-reader
+rules:
+  - apiGroups:
+      - ""
+    resources:
+      - configmaps
+      - endpoints
+      - secrets
+    resourceNames:
+      - {{ template "yeti-management.fullname" . }}
+    verbs:
+      - get
+      - list
+      - watch
+  - apiGroups:
+      - "apps"
+    resources:
+      - statefulsets
+    verbs:
+      - get
+      - list
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  name: {{ template "yeti-management.fullname" . }}-reader-rbinding
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: Role
+  name: {{ template "yeti-management.fullname" . }}-reader
+subjects:
+- kind: ServiceAccount
+  name: {{ template "yeti-management.fullname" . }}
+{{ end -}}

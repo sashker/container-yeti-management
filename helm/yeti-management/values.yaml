@@ -1,0 +1,105 @@
+# Default values for yeti-web.
+# This is a YAML-formatted file.
+# Declare variables to be passed into your templates.
+replicaCount: 1
+image:
+  repository: registry.gitlab.com/bmitelecom/yeti/yeti-management
+  tag: 1.0.17
+  pullPolicy: IfNotPresent
+rbacCreate: "true"
+rbacServiceAccount: management
+logLevel: 3
+popId: 4
+msgLoggerDir: "/var/spool/sems/dump"
+audioRecorderDir: "/var/spool/sems/record"
+audioRecorderCompress: "true"
+logDir: "/tmp"
+routingSchema: "switch14"
+routingFunction: "route_release"
+routingInit: "init"
+routingMasterSize: 4
+routingMasterCheckInterval: 10
+routingMasterMaxExceptions: 0
+routingMasterStatementTimeout: 3000
+routingMasterDbHost: "postgresql"
+routingMasterDbPort: 5432
+routingFailoverToSlave: "true"
+routingSlaveDbHost: "postgresql"
+routingSlaveDbPort: 5432
+routingSlaveSize: 4
+routingSlaveCheckInterval: 10
+routingSlaveMaxExceptions: 0
+routingSlaveStatementTimeout: 3000
+routingCacheEnabled: "false"
+routingCacheCheckInterval: 60
+routingCacheBuckets: 100000
+routingUseRadius: "true"
+cdrDir: "/var/spool/sems/cdrs"
+cdrCompletedDir: "/var/spool/sems/cdrs/completed"
+cdrPoolSize: 2
+cdrSchema: "switch"
+cdrFunction: "writecdr"
+cdrMasterDbHost: "postgresql"
+cdrMasterDbPort: 5432
+cdrMasterDbName: "yeti"
+cdrFailoverToSlave: "false"
+cdrSlaveDbHost: "postgresql"
+cdrSlaveDbPort: 5432
+cdrFailoverRequeue: "true"
+cdrFailoverToFile: "false"
+cdrSerializeDynamicFields: "false"
+resourcesRejectOnError: "false"
+resourcesDbWriteHost: "redis"
+resourcesDbWritePort: 6379
+resourcesDbWriteSize: 2
+resourcesDbWriteTimeout: 500
+resourcesDbReadHost: "redis"
+resourcesDbReadPort: 6379
+resourcesDbReadSize: 2
+resourcesDbReadTimeout: 1000
+registrationsCheckInterval: 5000
+rpcCallsShowLimit: 1000
+secret:
+  #Routing
+  routingMasterDbName: "yeti"
+  routingMasterDbUser: "yeti"
+  routingMasterDbPass: "HtfybvfwbZ911."
+  routingSlaveDbName: "yeti"
+  routingSlaveDbUser: "yeti"
+  routingSlaveDbPass: "HtfybvfwbZ911."
+  #CDR
+  cdrMasterDbName: "cdr"
+  cdrMasterDbUser: "yeti"
+  cdrMasterDbPass: "HtfybvfwbZ911."
+  cdrSlaveDbName: "cdr"
+  cdrSlaveDbUser: "yeti"
+  cdrSlaveDbPass: "HtfybvfwbZ911."
+service:
+  name: yeti-management
+  type: ClusterIP
+  serviceAddress: "0.0.0.0"
+  servicePort: 4444
+ingress:
+  enabled: false
+  # Used to create an Ingress record.
+  hosts:
+    - yeti-management.example.com
+  annotations:
+    kubernetes.io/ingress.class: nginx
+    kubernetes.io/tls-acme: "true"
+  tls:
+    # Secrets must be manually created in the namespace.
+    - secretName: yeti-management.example.com
+      hosts:
+        - yeti-management.example.com
+resources: {}
+  # We usually recommend not to specify default resources and to leave this as a conscious
+  # choice for the user. This also increases chances charts run on environments with little
+  # resources, such as Minikube. If you do want to specify resources, uncomment the following
+  # lines, adjust them as necessary, and remove the curly braces after 'resources:'.
+  # limits:
+  #  cpu: 100m
+  #  memory: 128Mi
+  # requests:
+  #  cpu: 100m
+  #  memory: 128Mi

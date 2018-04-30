@@ -1,0 +1,16 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ template "yeti-management.fullname" . }}
+  labels:
+{{ include "management_labels" . | indent 4}}
+  annotations:
+    service.alpha.kubernetes.io/tolerate-unready-endpoints: 'true'
+spec:
+  clusterIP: None
+  selector:
+    app: yeti-management
+    release: {{ .Release.Name }}
+  ports:
+  - name: data
+    port: 4444

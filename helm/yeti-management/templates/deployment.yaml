@@ -1,0 +1,53 @@
+apiVersion: extensions/v1beta1
+kind: Deployment
+metadata:
+  name: {{ template "yeti-management.fullname" . }}
+spec:
+  replicas: {{ .Values.replicaCount }}
+  template:
+    metadata:
+      labels:
+{{ include "management_labels" . | indent 8}}
+      annotations:
+        checksum/config-map: {{ include (print $.Chart.Name "/templates/config.yaml") . | sha256sum }}
+    spec:
+      terminationGracePeriodSeconds: 30
+      {{- if .Values.rbacCreate }}
+      serviceAccountName: {{ template "yeti-management.fullname" . }}
+      {{ end }}
+      initContainers:
+      - name: {{ .Chart.Name }}-config
+        image: telephoneorg/tmpld
+        imagePullPolicy: {{ .Values.image.pullPolicy }}
+        args:
+        - tmpld /templates/*.j2
+        env:
+        - name: KUBE_NAMESPACE
+          valueFrom:
+            fieldRef:
+              apiVersion: v1
+              fieldPath: metadata.namespace
+        volumeMounts:
+        - name: templates
+          mountPath: /templates
+        - name: config
+          mountPath: /etc/yeti
+      containers:
+      - name: {{ .Chart.Name }}-manager
+        image: "{{ .Values.image.repository }}:{{ .Values.image.tag }}"
+        imagePullPolicy: {{ .Values.image.pullPolicy }}
+        env:
+        - name: USER
+          value: root
+        ports:
+        - name: data
+          containerPort: {{ .Values.service.servicePort }}
+        volumeMounts:
+        - name: config
+          mountPath: /etc/yeti
+      volumes:
+      - name: templates
+        configMap:
+          name: {{ template "yeti-management.fullname" . }}-templates
+      - name: config
+        emptyDir: {}

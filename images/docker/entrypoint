@@ -1,0 +1,16 @@
+#!/bin/bash -l
+#Make our script a little bit safer
+set -eo pipefail
+
+log::m-info "Writing $APP database.yml ..."
+cat > /etc/yeti/management.cfg <<EOF
+daemon {
+    listen = {
+        "tcp://$MANAGER_ADDRESS:$MANAGER_PORT",
+    }
+    log_level = $MANAGER_LOG_LEVEL
+}
+EOF
+
+log::m-info "Starting $APP ..."
+exec gosu $USER yeti_management -f

@@ -1,0 +1,202 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{ template "yeti-management.fullname" . }}
+  labels:
+{{ include "management_labels" . | indent 4 }}
+data:
+  management_address: {{ .Values.service.serviceAddress | quote }}
+  management_port: {{ .Values.service.servicePort | quote }}
+  management_log_level: {{ .Values.logLevel | quote }}
+  pop_id: {{ .Values.popId | quote }}
+  msg_logger_dir: {{ .Values.msgLoggerDir | quote }}
+  audio_recorder_dir: {{ .Values.audioRecorderDir | quote }}
+  audio_recorder_compress: {{ .Values.audioRecorderCompress | quote }}
+  log_dir: {{ .Values.logDir | quote }}
+  routing_schema: {{ .Values.routingSchema | quote }}
+  routing_function: {{ .Values.routingFunction | quote }}
+  routing_init: {{ .Values.routingInit | quote }}
+  routing_master_size: {{ .Values.routingMasterSize | quote }}
+  routing_master_check_interval: {{ .Values.routingMasterCheckInterval | quote }}
+  routing_master_max_exceptions: {{ .Values.routingMasterMaxExceptions | quote }}
+  routing_master_statement_timeout: {{ .Values.routingMasterStatementTimeout | quote }}
+  routing_master_db_host: {{ .Values.routingMasterDbHost | quote }}
+  routing_master_db_port: {{ .Values.routingMasterDbPort | quote }}
+  routing_failover_to_slave: {{ .Values.routingFailoverToSlave | quote }}
+  routing_slave_db_host: {{ .Values.routingSlaveDbHost | quote }}
+  routing_slave_db_port: {{ .Values.routingSlaveDbPort | quote }}
+  routing_slave_size: {{ .Values.routingSlaveSize | quote }}
+  routing_slave_check_interval: {{ .Values.routingSlaveCheckInterval | quote }}
+  routing_slave_max_exceptions: {{ .Values.routingSlaveMaxExceptions | quote }}
+  routing_slave_statement_timeout: {{ .Values.routingSlaveStatementTimeout | quote }}
+  routing_cache_enabled: {{ .Values.routingCacheEnabled | quote }}
+  routing_cache_check_interval: {{ .Values.routingCacheCheckInterval | quote }}
+  routing_cache_buckets: {{ .Values.routingCacheBuckets | quote }}
+  routing_use_radius: {{ .Values.routingUseRadius | quote }}
+  cdr_dir: {{ .Values.cdrDir | quote }}
+  cdr_completed_dir: {{ .Values.cdrCompletedDir | quote }}
+  cdr_pool_size: {{ .Values.cdrPoolSize | quote }}
+  cdr_schema: {{ .Values.cdrSchema | quote }}
+  cdr_function: {{ .Values.cdrFunction | quote }}
+  cdr_master_db_host: {{ .Values.cdrMasterDbHost | quote }}
+  cdr_master_db_port: {{ .Values.cdrMasterDbPort | quote }}
+  cdr_master_db_name: {{ .Values.cdrMasterDbName | quote }}
+  cdr_failover_to_slave: {{ .Values.cdrFailoverToSlave | quote }}
+  cdr_slave_db_host: {{ .Values.cdrSlaveDbHost | quote }}
+  cdr_slave_db_port: {{ .Values.cdrSlaveDbPort | quote }}
+  cdr_failover_requeue: {{ .Values.cdrFailoverRequeue | quote }}
+  cdr_failover_to_file: {{ .Values.cdrFailoverToFile | quote }}
+  cdr_serialize_dynamic_fields: {{ .Values.cdrSerializeDynamicFields | quote }}
+  resources_reject_on_error: {{ .Values.resourcesRejectOnError | quote }}
+  resources_db_write_host: {{ .Values.resourcesDbWriteHost | quote }}
+  resources_db_write_port: {{ .Values.resourcesDbWritePort | quote }}
+  resources_db_write_size: {{ .Values.resourcesDbWriteSize | quote }}
+  resources_db_write_timeout: {{ .Values.resourcesDbWriteTimeout | quote }}
+  resources_db_read_host: {{ .Values.resourcesDbReadHost | quote }}
+  resources_db_read_port: {{ .Values.resourcesDbReadPort | quote }}
+  resources_db_read_size: {{ .Values.resourcesDbReadSize | quote }}
+  resources_db_read_timeout: {{ .Values.resourcesDbReadTimeout | quote }}
+  registrations_check_interval: {{ .Values.registrationsCheckInterval | quote }}
+  rpc_calls_show_limit: {{ .Values.rpcCallsShowLimit | quote}}
+
+---
+
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{ template "yeti-management.fullname" . }}-templates
+  labels:
+{{ include "management_labels" . | indent 4}}
+data:
+  management.cfg.j2: |
+    ---
+    target: /etc/yeti/management.cfg
+    ---
+    {% set config_map = env.get('CONFIG_MAP', '{{ template "yeti-management.fullname" . }}') %}
+    {% set config = kube.get('configmap', config_map).data -%}
+    {% set management_address = config.get('manager_address', '0.0.0.0') -%}
+    {% set management_port = config.get('manager_port', '4444') -%}
+    {% set management_log_level = config.get('log_level', '3') -%}
+
+    daemon {
+      listen = {
+        "tcp://{{ .Values.service.serviceAddress }}:{{ .Values.service.servicePort }}",
+      }
+      log_level = {{ .Values.logLevel }}
+    }
+  system.cfg.j2: |
+    ---
+    target: /etc/yeti/system.cfg
+    ---
+    {% set config_map = env.get('CONFIG_MAP', '{{ template "yeti-management.fullname" . }}') %}
+    {% set config = kube.get('configmap', config_map).data -%}
+    {% set secret = kube.get('secret', '{{ template "yeti-management.fullname" . }}').data -%}
+
+    signalling {
+      globals {
+        yeti {
+          pop_id = {{"{{ config.get('pop_id', '1') }}"}}
+          msg_logger_dir = {{"{{ config.get('msg_logger_dir', '/var/spool/sems/dump') }}"}}
+          audio_recorder_dir = {{"{{ config.get('audio_recorder_dir', '/var/spool/sems/record') }}"}}
+          audio_recorder_compress = {{"{{ config.get('audio_recorder_compress', 'true') }}"}}
+          log_dir = {{"{{ config.get('log_dir', '/tmp') }}"}}
+
+          routing {
+            schema = {{"{{ config.get('routing_schema', 'switch14') }}"}}
+            function = {{"{{ config.get('routing_function', 'route_release') }}"}}
+            init = {{"{{ config.get('routing_init', 'init') }}"}}
+
+            master_pool {
+              host = {{"{{ config.get('routing_master_db_host', '127.0.0.1') }}"}}
+              port = {{"{{ config.get('routing_master_db_port', '5432') }}"}}
+              name = {{"{{ secret.get('routing_master_db_name', 'yeti') }}"}}
+              user = {{"{{ secret.get('routing_master_db_user', 'yeti') }}"}}
+              pass = {{  "{{ secret.get('routing_master_db_pass', 'yeti') }}" }}
+              size = {{  "{{ config.get('routing_master_size', '4') }}" }}
+              check_interval = {{  "{{ config.get('routing_master_check_interval', '10') }}" }}
+              max_exceptions = {{ "{{ config.get('routing_master_max_exceptions', '0') }}" }}
+              statement_timeout = {{  "{{ config.get('routingh_master_statement_timeout', '3000') }}" }}
+            }
+
+            failover_to_slave = {{  "{{ config.get('routing_failover_to_slave', 'true') }}" }}
+
+            slave_pool {
+              host = {{  "{{ config.get('routing_slave_db_host', '127.0.0.1') }}" }}
+              port = {{  "{{ config.get('routing_slave_db_port', '5432') }}" }}
+              name = {{  "{{ secret.get('routing_slave_db_name', 'yeti') }}" }}
+              user = {{  "{{ secret.get('routing_slave_db_user', 'yeti') }}" }}
+              pass = {{  "{{ secret.get('routing_slave_db_pass', 'yeti') }}" }}
+              size = {{  "{{ config.get('routing_slave_size', '4') }}" }}
+              check_interval = {{  "{{ config.get('routing_slave_check_interval', '10') }}" }}
+              max_exceptions = {{  "{{ config.get('routing_slave_max_exceptions', '0') }}" }}
+              statement_timeout = {{  "{{ config.get('routing_slave_statement_timeout', '3000') }}" }}
+            }
+
+            cache {
+              enabled = {{  "{{ config.get('routing_cache_enabled', 'false') }}" }}
+              check_interval = {{  "{{ config.get('routing_cache_check_interval', '60') }}" }}
+              buckets = {{  "{{ config.get('routing_cache_buckets', '100000') }}" }}
+            }
+
+            use_radius = {{  "{{ config.get('routing_use_radius', 'true') }}" }}
+          }
+
+          cdr {
+            dir = {{  "{{ config.get('cdr_dir', '/var/spool/sems/cdrs') }}" }}
+            completed_dir = {{  "{{ config.get('cdr_completed_dir', '/var/spool/sems/cdrs/completed') }}" }}
+            pool_size = {{  "{{ config.get('cdr_pool_size', '2') }}" }}
+            schema = {{  "{{ config.get('cdr_schema', 'switch') }}" }}
+            function = {{  "{{ config.get('cdr_function', 'writecdr') }}" }}
+
+            master {
+              host = {{  "{{ config.get('cdr_master_db_host', '127.0.0.1') }}" }}
+              port = {{  "{{ config.get('cdr_master_db_port', '5432') }}" }}
+              name = {{  "{{ secret.get('cdr_master_db_name', 'cdr') }}" }}
+              user = {{  "{{ secret.get('cdr_master_db_user', 'yeti') }}" }}
+              pass = {{  "{{ secret.get('cdr_master_db_pass', 'yeti') }}" }}
+            }
+
+            failover_to_slave = {{  "{{ config.get('cdr_failover_to_slave', 'false') }}" }}
+
+            slave {
+              host = {{  "{{ config.get('cdr_slave_db_host', '127.0.0.1') }}" }}
+              port = {{  "{{ config.get('cdr_slave_db_port', '5432') }}" }}
+              name = {{  "{{ secret.get('cdr_slave_db_name', 'cdr') }}" }}
+              user = {{  "{{ secret.get('cdr_slave_db_user', 'yeti') }}" }}
+              pass = {{  "{{ secret.get('cdr_slave_db_pass', 'yeti') }}" }}
+            }
+
+            failover_requeue = {{  "{{ config.get('cdr_failover_requeue', 'true') }}" }}
+            failover_to_file = {{  "{{ config.get('cdr_failover_to_file', 'false') }}" }}
+            serialize_dynamic_fields = {{  "{{ config.get('cdr_serialize_dynamic_fields', 'false') }}" }}
+          }
+
+          resources {
+            reject_on_error = {{  "{{ config.get('resources_reject_on_error', 'false') }}" }}
+
+            write {
+              host = {{  "{{ config.get('resources_db_write_host', '127.0.0.1') }}" }}
+              port = {{  "{{ config.get('resources_db_write_port', '6379') }}" }}
+              size = {{  "{{ config.get('resources_db_write_size', '2') }}" }}
+              timeout = {{  "{{ config.get('resources_db_write_timeout', '500') }}" }}
+            }
+
+            read {
+              host = {{  "{{ config.get('resources_db_read_host', '127.0.0.1') }}" }}
+              port = {{  "{{ config.get('resources_db_read_port', '6379') }}" }}
+              size = {{  "{{ config.get('resources_db_read_size', '2') }}" }}
+              timeout = {{  "{{ config.get('resources_db_read_timeout', '1000') }}" }}
+            }
+          }
+
+          registrations {
+            check_interval = {{  "{{ config.get('registrations_check_interval', '5000') }}" }}
+          }
+
+          rpc {
+            calls_show_limit = {{  "{{ config.get('rpc_calls_show_limit', '1000') }}" }}
+          }
+        }
+      }
+      node 8 {}
+    }

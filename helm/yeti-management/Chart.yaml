@@ -1,0 +1,4 @@
+apiVersion: v1
+description: A Helm chart for Yeti management server (part of Yeti switch)
+name: yeti-management
+version: 1.0.0
