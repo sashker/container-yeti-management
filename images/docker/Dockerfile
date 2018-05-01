@@ -3,8 +3,8 @@ FROM telephoneorg/debian:jessie
 LABEL maintainer="Alexander Mustafin <mustafin.aleksandr@gmail.com>"
 
 #Build stage variables
-ARG BRANCH master
-ARG REPO https://gitlab.com/bmitelecom/yeti/yeti-management.git
+ARG BRANCH="master"
+ARG REPO="https://gitlab.com/bmitelecom/yeti/yeti-management.git"
 
 ENV APP yeti-management
 ENV USER $APP
