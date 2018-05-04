@@ -25,6 +25,9 @@ VOLUME ["$HOME"]
 
 SHELL ["/bin/bash", "-lc"]
 
+HEALTHCHECK --interval=15s --timeout=5s \
+    CMD netcat $MANAGER_ADDRESS $MANAGER_PORT || exit 1
+
 COPY entrypoint /
 
 # The default command that gets ran will be to start the yeti-management daemon.
