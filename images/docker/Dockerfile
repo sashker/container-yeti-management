@@ -3,7 +3,7 @@ FROM telephoneorg/debian:stretch
 LABEL maintainer="Alexander Mustafin <mustafin.aleksandr@gmail.com>"
 
 #Build stage variables
-ARG BRANCH="master"
+ARG BRANCH="1.2.1"
 ARG REPO="https://gitlab.com/bmitelecom/yeti/yeti-management.git"
 
 ENV APP yeti-management
