@@ -20,6 +20,10 @@ apt-get install -yqq \
     cmake \
     protobuf-compiler \
     pkg-config \
+    libsctp1 \
+    libsctp-dev \
+    libevent-2.0-5 \
+    libevent-dev \
     git
 
 log::m-info "Creating the config directory ..."
@@ -39,7 +43,7 @@ cmake ..
 log::m-info "Installing files of the project ..."
 make install
 
-log::m-info "Removing jq and git ..."
+log::m-info "Removing unnecessary packages..."
 apt-get purge -y --auto-remove git build-essential cmake protobuf-compiler pkg-config
 
 log::m-info "Cleaning up ..."
